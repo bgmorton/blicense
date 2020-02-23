@@ -1,0 +1,11 @@
+=====BEGIN LICENSE=====
+ACME Widget Software
+by www.example.com
+This license is for use on a single computer system only.
+License Version: {{&license_version}}
+Customer Name: {{&customer_name}}
+Email: {{&email}}
+Created: {{&created}}
+Expires: {{&expires}}
+Serial: {{&serial}}
+=====END LICENSE=====

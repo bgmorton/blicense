@@ -1,0 +1,48 @@
+<h2>Pricing</h2>
+
+<table class="table table-striped">
+    <tr>
+        <td>
+            Price Per Installation Per Month
+        </td>
+        <td id="info-price-per-month">
+            <%= process.env.STRIPE_CURRENCY_SYMBOL %><%= process.env.LICENSE_PRICE_PER_MONTH %>
+        </td>
+    </tr>
+    <% if (process.env.LICENSE_DISCOUNT_PER_ADDITIONAL_MONTH_PERCENTAGE > 0 && process.env.LICENSE_DISCOUNT_PER_ADDITIONAL_MONTH_PERCENTAGE_MAX > 0) { %>
+    <%= process.env.STRIPE_CURRENCY %>
+    <tr>
+        <td>
+            Discount Per Additional Month
+        </td>
+        <td>
+            <%= process.env.LICENSE_DISCOUNT_PER_ADDITIONAL_MONTH_PERCENTAGE %>% up to a maximum of
+            <%= process.env.LICENSE_DISCOUNT_PER_ADDITIONAL_MONTH_PERCENTAGE_MAX %>%
+        </td>
+    </tr>
+    <% } %>
+    <% if (process.env.STRIPE_GST_PERCENT > 0) { %>
+    <tr>
+        <td>
+            Tax
+        </td>
+        <td>
+            <%= process.env.STRIPE_GST_PERCENT %>% <%= process.env.STRIPE_GST_NAME %> Tax for customers in
+            <%= process.env.STRIPE_GST_COUNTRY %>
+        </td>
+    </tr>
+    <% } %>
+
+</table>
+<p class="text-muted small"> All prices are currency converted to <%= process.env.STRIPE_CURRENCY %> at
+    time of payment. See <a target="_blank" href="https://www.xe.com">xe.com</a> for conversion approximation</p>
+
+<script>
+
+    // Update the price column to reflect currency decimals
+    document.getElementById('info-price-per-month').innerText = 
+        "<%= process.env.STRIPE_CURRENCY_SYMBOL %>" + 
+        (Number(<%= process.env.LICENSE_PRICE_PER_MONTH %>).toFixed(<%= process.env.STRIPE_CURRENCY_DECIMALS %>)) + 
+        '  <%= process.env.STRIPE_CURRENCY %> ';
+        
+</script>

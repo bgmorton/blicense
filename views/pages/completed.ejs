@@ -1,0 +1,76 @@
+<!-- views/pages/completed.ejs -->
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <%- include ('../partials/head') %>
+
+</head>
+
+<body>
+
+    <%- include ('../partials/header') %>
+
+    <!-- Begin page content -->
+    <main role="main" class="container">
+
+        <div>
+
+            <% if (process.env.LOGO == 'true') { %>
+            <p>
+                <img class="img img-fluid" src="logo.png">
+            </p>
+            <% } %>
+
+            <p>
+                <%- process.env.COMPLETED %>
+            </p>
+
+            <h3>
+                The following email containing invoice and license details has been sent to you. If you have not
+                received this
+                email, please save the below for your reference before navigating away from or refreshing this page.
+            </h3>
+
+            <a href="#" class="btn btn-primary btn-block" onclick="downloadInvoice()">Download as File</a>
+
+            <pre id="invoice-text" class="pre-scrollable border p-3 bg-light"><%= invoiceText %></pre>
+
+        </div>
+
+    </main>
+
+    <script>
+
+        // Provide the user a way to download the invoice/license as a file
+        function downloadInvoice() {
+
+            let content = document.getElementById('invoice-text').innerText;
+            let uriContent = 'data:text/plain;charset=utf-8,' + encodeURIComponent(content);
+            let filename = 'invoice.txt';
+
+            var pom = document.createElement('a');
+            pom.setAttribute('href', uriContent);
+            pom.setAttribute('download', filename);
+
+            if (document.createEvent) {
+                var event = document.createEvent('MouseEvents');
+                event.initEvent('click', true, true);
+                pom.dispatchEvent(event);
+            }
+            else {
+                pom.click();
+            }
+            
+        }
+
+    </script>
+
+    <%- include ('../partials/footer') %>
+
+</body>
+
+</html>

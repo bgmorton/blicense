@@ -1,0 +1,253 @@
+<!-- views/pages/index.ejs -->
+
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <%- include ('../partials/head') %>
+</head>
+
+<body>
+
+    <%- include ('../partials/header') %>
+
+    <!-- Begin page content -->
+    <main role="main" class="container">
+
+        <div class="row border-bottom mb-2 mt-2 pb-2">
+
+            <div class="col-md">
+
+                <!-- Logo/Description -->
+                <% if (process.env.LOGO == 'true') { %>
+                <p class="text-center">
+                    <img class="img img-fluid" src="logo.png">
+                </p>
+                <% } %>
+                <p class="text-center">
+                    <%- process.env.DESCRIPTION %>
+                </p>
+
+
+                <!-- Pricing -->
+                <p>
+                    <%- include ('../partials/pricing') %>
+                </p>
+
+                <!-- Product Info -->
+                <div class="row">
+
+                    <div class="col p-1 text-center">
+                        <a class="btn btn-secondary" href="<%- process.env.PRODUCT_PAGE_LINK %>" target="_blank">View
+                            Product Information</a>
+                    </div>
+
+                    <div class="col p-1 text-center">
+                        <a class="btn btn-secondary" href="<%- process.env.TERMS_PAGE_LINK %>" target="_blank">View
+                            Terms & Conditions</a>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md border border-info rounded">
+
+                <!-- Form - Elected not to repopulate it on validation error to force data re-entry -->
+                <h2>
+                    Purchase a software license for <%= process.env.PRODUCT_NAME %>
+                </h2>
+
+                <form action="/charge" method="POST" id="payment-form">
+
+                    <p>
+                        <label>
+                            Your Details
+                        </label>
+                        <input class="form-control" type="text" name="name" placeholder="Name" required>
+                    </p>
+
+                    <p>
+                        <input class="form-control" type="email" name="email" placeholder="Email" required>
+                    </p>
+
+                    <p>
+                        <input class="form-control" type="email" name="emailConfirm" placeholder="Confirm Email"
+                            required>
+                    </p>
+
+                    <p>
+                        <label for="duration">
+                            License Duration
+                        </label>
+                        <select class="form-control" name="duration" id="duration" required>
+                            <option value="" selected></option>
+                            <option value="6">License for 6 Months</option>
+                            <option value="12">License for 12 Months</option>
+                            <option value="24">License for 24 Months</option>
+                        </select>
+                    </p>
+
+                    <p class="text-muted small">
+                        Application will be licensed for use from the date and time of purchase until the end of the
+                        specified period.
+                    </p>
+
+                    <p>
+                        <label for="country">
+                            Your Country
+                        </label>
+                        <select class="form-control" name="country" id="country" required>
+                            <option value="" selected></option>
+                            <% countries.forEach(function(country) { %>
+                            <option value="<%= country %>"><%= country %></option>
+                            <% }); %>
+                        </select>
+                    </p>
+
+                    <p>
+                        <input type="checkbox" id="termsAccepted" name="termsAccepted" value="termsAccepted" required>
+                        <label for="termsAccepted">
+                            I agree to the terms and conditions outlined at the link
+                        </label>
+                    </p>
+
+                    <!-- Payment -->
+                    <p>
+                        <h4>
+                            TOTAL TO PAY: <span id="total-preview"></span>
+                        </h4>
+
+                        <input type="hidden" name="total" id="total"> <!-- Will be set by JS -->
+                        <label for="card-element">
+                            Pay securely with credit or debit card
+                        </label>
+
+                        <div id="card-element">
+                            <!-- A Stripe Element will be inserted here. -->
+                        </div>
+                    </p>
+
+                    <!-- Errors -->
+                    <div id="card-errors" role="alert" class="text-danger">
+                        <!-- A Stripe Element will be inserted here. -->
+                    </div>
+
+                    <% if (typeof validation_errors !== 'undefined') { %>
+                    <div id="validation-errors" role="alert" class="text-danger">
+                        <ul>
+                            <% validation_errors.forEach(function(error) { %>
+
+                            <% if (error.param == 'stripeToken') { %>
+                            <li>Invalid Payment Details</li>
+                            <% }; %>
+
+                            <% if (error.param == 'name') { %>
+                            <li>Invalid Name</li>
+                            <% }; %>
+
+                            <% if (error.param == 'email') { %>
+                            <li>Invalid Email Address</li>
+                            <% }; %>
+
+                            <% if (error.param == 'emailConfirm') { %>
+                            <li>Invalid Email Address Confirmation</li>
+                            <% }; %>
+
+                            <% if (error.param == 'country') { %>
+                            <li>Invalid Country</li>
+                            <% }; %>
+
+                            <% if (error.param == 'duration') { %>
+                            <li>Invalid Duration</li>
+                            <% }; %>
+
+                            <% if (error.param == 'total') { %>
+                            <li>Total did not validate. Please try again.</li>
+                            <% }; %>
+
+                            <% }); %>
+                        </ul>
+                    </div>
+                    <% } %>
+
+                    <!-- Submit Form -->
+                    <p>
+                        <button class="btn btn-primary btn-block">Submit Payment</button>
+                    </p>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <%- include ('../partials/footer') %>
+
+</body>
+
+<!-- Scripts -->
+<script>
+
+    // Calculate the total
+
+    let STRIPE_CURRENCY = "<%= process.env.STRIPE_CURRENCY %>";
+    let STRIPE_CURRENCY_SYMBOL = "<%= process.env.STRIPE_CURRENCY_SYMBOL %>";
+    let STRIPE_GST_PERCENT = Number("<%= process.env.STRIPE_GST_PERCENT %>");
+    let STRIPE_GST_COUNTRY = "<%= process.env.STRIPE_GST_COUNTRY %>";
+    let LICENSE_PRICE_PER_MONTH = Number("<%= process.env.LICENSE_PRICE_PER_MONTH %>");
+    let LICENSE_DISCOUNT_PER_ADDITIONAL_MONTH_PERCENTAGE = Number("<%= process.env.LICENSE_DISCOUNT_PER_ADDITIONAL_MONTH_PERCENTAGE %>");
+    let LICENSE_DISCOUNT_PER_ADDITIONAL_MONTH_PERCENTAGE_MAX = Number("<%= process.env.LICENSE_DISCOUNT_PER_ADDITIONAL_MONTH_PERCENTAGE_MAX %>");
+    let STRIPE_CURRENCY_DECIMALS = Number("<%= process.env.STRIPE_CURRENCY_DECIMALS %>");
+
+    function calculateTotal() {
+
+        let months = parseInt(document.getElementById('duration').value);
+        let country = document.getElementById('country').value;
+        let price = 0;
+        let taxAmount = 0;
+
+        if (!months) return price;// Nothing to do until options set
+
+        let discountFromAdditionalMonths = (months - 1) * LICENSE_DISCOUNT_PER_ADDITIONAL_MONTH_PERCENTAGE;//Subtract one from months as there should be no discount on the first month
+        if (discountFromAdditionalMonths > LICENSE_DISCOUNT_PER_ADDITIONAL_MONTH_PERCENTAGE_MAX) discountFromAdditionalMonths = LICENSE_DISCOUNT_PER_ADDITIONAL_MONTH_PERCENTAGE_MAX;//Discount cannot be more than max
+        discountFromAdditionalMonths = discountFromAdditionalMonths / 100;
+        price += LICENSE_PRICE_PER_MONTH * months;
+        price -= discountFromAdditionalMonths * price;
+
+        // Apply tax if required
+        taxAmount = country == STRIPE_GST_COUNTRY ? (STRIPE_GST_PERCENT / 100 * price) : 0;
+        price = price + taxAmount;
+        return price.toFixed(STRIPE_CURRENCY_DECIMALS);
+
+    }
+
+    // Calculate on form update
+    document.getElementById('payment-form').addEventListener('change', function (event) {
+
+        document.getElementById('total-preview').innerText = STRIPE_CURRENCY_SYMBOL + calculateTotal();
+        document.getElementById('total').value = calculateTotal();// No currency symbol required here!
+
+    });
+
+    // Calculate on reload
+    document.getElementById('total-preview').innerText = STRIPE_CURRENCY_SYMBOL + calculateTotal();
+    document.getElementById('total').value = STRIPE_CURRENCY_SYMBOL + calculateTotal();
+
+</script>
+
+<script>
+
+    // Set the stripe key for card.js
+    window.STRIPE_PUBLISHABLE_KEY = "<%= process.env.STRIPE_PUBLISHABLE_KEY %>";
+
+</script>
+
+<script src="https://js.stripe.com/v3/"></script>
+
+<script src="card.js"></script>
+
+</html>
